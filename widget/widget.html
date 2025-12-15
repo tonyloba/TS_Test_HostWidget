@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mock Search Widget</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 1rem;
+      background: #fafafa;
+    }
+    #results {
+      margin-top: 1rem;
+    }
+    .result-item {
+      padding: 6px;
+      border-bottom: 1px solid #ddd;
+      cursor: pointer;
+    }
+    .result-item:hover {
+      background: #e6f2ff;
+    }
+    .no-results {
+      color: #999;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <h3>External Search Widget</h3>
+  <label for="query">Search term:</label>
+  <input id="query" type="text" placeholder="Try typing 'playwright'">
+  <button id="searchBtn">Search</button>
+
+  <div id="results" role="region" aria-live="polite"></div>
+
+  <script>
+    const resultsEl = document.getElementById('results');
+    const queryEl = document.getElementById('query');
+    const searchBtn = document.getElementById('searchBtn');
+
+    const mockData = [
+      { id: 1, term: 'playwright', title: 'Playwright Testing Framework' },
+      { id: 2, term: 'automation', title: 'Automation Basics' },
+    ];
+
+    // Receive init message from parent
+    window.addEventListener('message', (event) => {
+      if (event.data?.type === 'init') {
+        console.log('Received init from parent:', event.data.payload);
+      }
+    });
+
+    // Perform a mock search
+    function performSearch() {
+      const q = queryEl.value.trim().toLowerCase();
+      resultsEl.innerHTML = '';
+
+      const results = mockData.filter(r => r.term.includes(q));
+      if (results.length === 0) {
+        resultsEl.innerHTML = `<div class="no-results">No results found</div>`;
+      } else {
+        results.forEach(r => {
+          const div = document.createElement('div');
+          div.className = 'result-item';
+          div.tabIndex = 0;
+          div.textContent = r.title;
+          div.dataset.id = r.id;
+          div.addEventListener('click', () => sendResultClick(r.id));
+          div.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendResultClick(r.id);
+          });
+          resultsEl.appendChild(div);
+        });
+      }
+
+      // Notify parent about search metrics
+      window.parent.postMessage({
+        type: 'searchMetrics',
+        totalResults: results.length,
+        query: q
+      }, '*');
+    }
+
+    // Notify parent when user clicks result
+    function sendResultClick(id) {
+      window.parent.postMessage({
+        type: 'resultClick',
+        id
+      }, '*');
+    }
+
+    searchBtn.addEventListener('click', performSearch);
+  </script>
+</body>
+</html>
