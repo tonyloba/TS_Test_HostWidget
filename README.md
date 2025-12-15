@@ -121,7 +121,7 @@ npx playwright test --headed --slow-mo=300
 npx playwright show-report
 ```
 
-![HTML Report](screenshots/Report1.png)
+![HTML Report](screenshots/Report1.PNG)
 
 ---
 
